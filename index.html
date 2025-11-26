@@ -251,8 +251,8 @@
                 <img id="playerImg" src="player.png" style="display:none">
                 <img id="enemyImg" src="enemy.png" style="display:none">
                 <!-- PRELOAD AUDIO -->
-                <audio id="shootSound" preload="auto" src="shoot.mp3"></audio>
-                <audio id="explodeSound" preload="auto" src="explode.mp3"></audio>
+                <audio id="shootSound" preload="auto" src="shoot.wav"></audio>
+                <audio id="explodeSound" preload="auto" src="explode.wav"></audio>
                 <!-- START SCREEN -->
                 <div id="start-screen" class="ui-layer screen active">
                     <h1>BRICK SHOOTER</h1>
@@ -767,6 +767,15 @@
 
                 this.state = 'PLAYING';
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                // 🔊 UNLOCK AUDIO ON MOBILE (iOS/Android)
+                const unlockAudio = () => {
+                    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    document.getElementById('shootSound').play().then(() => {
+                        document.getElementById('shootSound').pause();
+                    }).catch(() => {});
+                };
+                document.addEventListener('touchstart', unlockAudio, {once: true});
+                document.addEventListener('click', unlockAudio, {once: true});
                 
                 this.lastTime = performance.now();
                 requestAnimationFrame(t => this.loop(t));
