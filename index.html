@@ -26,11 +26,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* Dùng height thay vì min-height để cố định khung */
+            height: 100vh;
             width: 100vw;
-            touch-action: none; /* QUAN TRỌNG: Tắt các thao tác vuốt mặc định của trình duyệt */
-            overflow: hidden;   /* Cấm cuộn trang */
-            -webkit-user-select: none; /* Cấm chọn văn bản trên iOS */
+            touch-action: none; 
+            -webkit-user-select: none; 
             user-select: none;
         }
 
@@ -43,7 +42,7 @@
         /* --- NOKIA PHONE FRAME --- */
         #nokia-phone {
             width: 340px;
-            height: 690px;
+            height: 95%;
             background-color: var(--case-color);
             border-radius: 40px;
             box-shadow: 
@@ -75,7 +74,7 @@
         /* Screen Area */
         .screen-bezel {
             width: 260px;
-            height: 450px;
+            height: 370px;
             background-color: #555;
             border-radius: 10px 10px 20px 20px;
             padding: 15px;
@@ -164,8 +163,8 @@
         /* Positioning buttons in a cross shape */
         .btn-up { top: 0; left: 35%;  width: 50px; height: 50px; border-radius: 10px 10px 5px 5px; }
         .btn-down { bottom: 0; left: 35%;  width: 50px; height: 50px; border-radius: 5px 5px 10px 10px;}
-        .btn-left { top: 33%; left: 0;  width: 50px; height: 50px; border-radius: 10px 5px 5px 10px;}
-        .btn-right { top: 33%; right: 0;  width: 50px; height: 50px; border-radius: 5px 10px 10px 5px;}
+        .btn-left { top: 30%; left: -20%;  width: 70px; height: 70px; border-radius: 10px 5px 5px 10px;}
+        .btn-right { top: 30%; right: -20%;  width: 70px; height: 70px; border-radius: 5px 10px 10px 5px;}
         
         /* Center deco */
         .d-pad-center {
@@ -245,21 +244,6 @@
         @media (max-height: 700px) {
             #nokia-phone {
                 transform: scale(0.85);
-            }
-        }
-        @media (max-width: 400px) {
-            #nokia-phone {
-                top: -20px;
-                width: 96vw;
-                height: 96dvh;
-                max-width: 420px;
-                max-height: 780px;
-                padding: 10vw 6vw;     /* Viền đen siêu dày trên mobile */
-                border-radius: 12vw;
-                border: 6px solid #000;
-            }
-            .screen-bezel {
-                padding: 5vw;
             }
         }
         
