@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brick Shooter: Nokia Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@700&display=swap');
+
+        :root {
+            /* Nokia Palette */
+            --nokia-bg: #8b9c0f;      /* Xanh lá sáng (nền LCD) */
+            --nokia-dark: #0f380f;    /* Xanh đen (pixel hiển thị) */
+            --nokia-mid: #306230;     /* Xanh đậm vừa */
+            --nokia-light: #9bbc0f;   /* Xanh nhạt nhất */
+            
+            --case-color: #333333;
+            --btn-color: #e0e0e0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        /* --- NOKIA PHONE FRAME --- */
+        #nokia-phone {
+            width: 340px;
+            height: 100%;
+            background-color: var(--case-color);
+            border-radius: 40px;
+            box-shadow: 
+                inset 2px 2px 5px rgba(255,255,255,0.1),
+                inset -5px -5px 10px rgba(0,0,0,0.5),
+                10px 10px 30px rgba(0,0,0,0.5);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-sizing: border-box;
+            transform-origin: center;
+        }
+
+        /* Logo Area */
+        .brand {
+            font-family: 'Roboto', sans-serif;
+            color: #ccc;
+            font-size: 18px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Screen Area */
+        .screen-bezel {
+            width: 260px;
+            height: 340px;
+            background-color: #555;
+            border-radius: 10px 10px 20px 20px;
+            padding: 15px;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lcd-container {
+            width: 100%;
+            height: 100%;
+            background-color: var(--nokia-bg);
+            border: 2px solid #444;
+            box-shadow: inset 1px 1px 4px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanline Effect */
+        .lcd-container::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            /* image-rendering: pixelated; Removed for vector smoothness */
+        }
+
+        /* --- CONTROLS --- */
+        .controls-area {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* D-PAD Layout */
+        .d-pad {
+            position: relative;
+            width: 160px;
+            height: 160px;
+        }
+
+        .btn {
+            position: absolute;
+            background: linear-gradient(145deg, #555, #333);
+            border: none;
+            border-radius: 10px; /* Slightly squarish like classic phones */
+            box-shadow: 
+                3px 3px 5px rgba(0,0,0,0.5),
+                inset 1px 1px 2px rgba(255,255,255,0.2);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            transition: transform 0.1s;
+            /* Disable selection */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn:active, .btn.pressed {
+            transform: translateY(1px);         /* Chỉ dịch xuống 1px thay vì scale */
+            background: linear-gradient(145deg, #444, #333);
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4);
+        }
+
+        /* Positioning buttons in a cross shape */
+        .btn-up { top: 0; left: 35%;  width: 50px; height: 50px; border-radius: 10px 10px 5px 5px; }
+        .btn-down { bottom: 0; left: 35%;  width: 50px; height: 50px; border-radius: 5px 5px 10px 10px;}
+        .btn-left { top: 33%; left: 0;  width: 50px; height: 50px; border-radius: 10px 5px 5px 10px;}
+        .btn-right { top: 33%; right: 0;  width: 50px; height: 50px; border-radius: 5px 10px 10px 5px;}
+        
+        /* Center deco */
+        .d-pad-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: #222;
+            border-radius: 5px;
+        }
+
+        /* --- GAME UI OVERLAYS (INSIDE LCD) --- */
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 20;
+            color: var(--nokia-dark);
+        }
+
+        .screen {
+            background-color: rgba(139, 156, 15, 0.9);
+            padding: 10px;
+            border: 2px solid var(--nokia-dark);
+            display: none;
+            pointer-events: auto;
+            width: 80%;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--nokia-dark);
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 10px;
+            line-height: 1.4;
+            color: var(--nokia-dark);
+        }
+
+        /* Retro Button Style */
+        .ui-btn {
+            background-color: transparent;
+            color: var(--nokia-dark);
+            border: 2px solid var(--nokia-dark);
+            padding: 8px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .ui-btn:active {
+            background-color: var(--nokia-dark);
+            color: var(--nokia-bg);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Media Queries for small screens */
+        @media (max-height: 700px) {
+            #nokia-phone {
+                transform: scale(0.85);
+            }
+        }
+    </style>
+    
+</head>
+<body>
+
+    <div id="nokia-phone">
+        <div class="brand">NOKIA</div>
+        
+        <div class="screen-bezel">
+            <div class="lcd-container">
+                <canvas id="gameCanvas"></canvas>
+                <img id="playerImg" src="player.png" style="display:none">
+                <img id="enemyImg" src="enemy.png" style="display:none">
+                <!-- PRELOAD AUDIO -->
+                <audio id="shootSound" preload="auto" src="shoot.mp3"></audio>
+                <audio id="explodeSound" preload="auto" src="explode.mp3"></audio>
+                <!-- START SCREEN -->
+                <div id="start-screen" class="ui-layer screen active">
+                    <h1>BRICK SHOOTER</h1>
+                    <p>HI-SCORE: <span id="menu-highscore">0</span></p>
+                    <button class="ui-btn" onclick="game.start()">START</button>
+                    <p style="margin-top:5px; font-size: 8px;">LEVELS: 20</p>
+                </div>
+
+                <!-- GAME OVER SCREEN -->
+                <div id="gameover-screen" class="ui-layer screen">
+                    <h1>GAME OVER</h1>
+                    <p>SCORE: <span id="go-score">0</span></p>
+                    <p>BEST: <span id="go-highscore">0</span></p>
+                    <button class="ui-btn" onclick="game.start()">RETRY</button>
+                    <button class="ui-btn" onclick="game.showMenu()">MENU</button>
+                </div>
+
+                <!-- LEVEL UP / MESSAGE -->
+                <div id="message-screen" class="ui-layer screen">
+                    <h1 id="msg-title">LEVEL UP!</h1>
+                    <p id="msg-sub">NEXT WAVE...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-area">
+            <div class="d-pad">
+                <div class="d-pad-center"></div>
+                <button class="btn btn-up" id="btn-up">▲</button>
+                <button class="btn btn-left" id="btn-left">◀</button>
+                <button class="btn btn-right" id="btn-right">▶</button>
+                <button class="btn btn-down" id="btn-down">▼</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * BRICK SHOOTER: NOKIA EDITION
+         * Theme: Monochrome LCD (Dark Green on Light Green)
+         * Control: D-Pad (4 directions)
+         */
+
+        const CONFIG = {
+            // Canvas internal resolution (keep small for retro feel)
+            CANVAS_WIDTH: 240, 
+            CANVAS_HEIGHT: 320,
+            FPS: 60,
+            COLORS: {
+                BG: '#8b9c0f',       // Lightest (Screen)
+                MAIN: '#0f380f',     // Darkest (Ink)
+                ACCENT: '#306230',   // Dark Grey (Shading)
+                HIGHLIGHT: '#8b9c0f' // Transparent/Bg match
+            },
+            PLAYER: {
+                WIDTH: 24,
+                HEIGHT: 24,
+                SPEED: 3,
+                COOLDOWN: 15
+            },
+            MAX_LEVEL: 20
+        };
+
+        const TYPES = {
+            NORMAL: 'normal',
+            ARMORED: 'armored',
+            FAST: 'fast',
+            SPLITTER: 'splitter',
+            SHOOTER: 'shooter',
+            HEALER: 'healer',
+            POWERUP: 'powerup'
+        };
+
+        const POWERUPS = {
+            RAPID_FIRE: { id: 0, label: 'R.FIRE', duration: 400 }, 
+            MULTI_SHOT: { id: 1, label: 'MULTI', duration: 400 },
+            PIERCING:   { id: 2, label: 'PIERCE', duration: 600 },
+            SHIELD:     { id: 3, label: 'SHIELD', duration: 800 },
+            BOMB:       { id: 4, label: 'BOMB', duration: 0 }, 
+            EXTRA_LIFE: { id: 5, label: '1UP', duration: 0 }    
+        };
+
+        // --- UTILS ---
+        const Utils = {
+            randomRange: (min, max) => Math.random() * (max - min) + min,
+            randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
+            checkAABB: (rect1, rect2) => {
+                return (rect1.x < rect2.x + rect2.width &&
+                        rect1.x + rect1.width > rect2.x &&
+                        rect1.y < rect2.y + rect2.height &&
+                        rect1.y + rect1.height > rect2.y);
+            },
+            checkCircleRect: (circle, rect) => {
+                let distX = Math.abs(circle.x - rect.x - rect.width / 2);
+                let distY = Math.abs(circle.y - rect.y - rect.height / 2);
+                if (distX > (rect.width / 2 + circle.r)) return false;
+                if (distY > (rect.height / 2 + circle.r)) return false;
+                if (distX <= (rect.width / 2)) return true; 
+                if (distY <= (rect.height / 2)) return true;
+                let dx = distX - rect.width / 2;
+                let dy = distY - rect.height / 2;
+                return (dx * dx + dy * dy <= (circle.r * circle.r));
+            },
+            // Vector drawing adapted for Monochrome Nokia Style
+            /*
+            drawVectorPlane: (ctx, x, y, scale, rotation, isEnemy) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.scale(scale, scale);
+                ctx.lineWidth = 2;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+
+                // In monochrome, enemies are filled solid dark, player is outlined or lighter
+                const fillColor = isEnemy ? CONFIG.COLORS.MAIN : CONFIG.COLORS.BG;
+                const strokeColor = CONFIG.COLORS.MAIN;
+
+                // Body
+                ctx.fillStyle = fillColor;
+                ctx.strokeStyle = strokeColor;
+                ctx.beginPath();
+                ctx.moveTo(0, -100);
+                ctx.lineTo(30, -40);
+                ctx.lineTo(30, 80);
+                ctx.lineTo(15, 110);
+                ctx.lineTo(-15, 110);
+                ctx.lineTo(-30, 80);
+                ctx.lineTo(-30, -40);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Wings
+                ctx.beginPath();
+                ctx.moveTo(-30, -20);
+                ctx.lineTo(-110, 10);
+                ctx.lineTo(-30, 40);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(30, -20);
+                ctx.lineTo(110, 10);
+                ctx.lineTo(30, 40);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Details (Cockpit) - Just stroke
+                if (!isEnemy) {
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -50);
+                    ctx.lineTo(10, -50);
+                    ctx.lineTo(0, -80);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+                */
+        };
+
+        class Pool {
+            constructor(createFn, resetFn) {
+                this.pool = [];
+                this.createFn = createFn; 
+                this.resetFn = resetFn;   
+            }
+            get() {
+                if (this.pool.length > 0) {
+                    const item = this.pool.pop();
+                    this.resetFn(item);
+                    return item;
+                }
+                return this.createFn();
+            }
+            release(item) {
+                this.pool.push(item);
+            }
+        }
+
+        // --- GAME OBJECTS ---
+
+        class Particle {
+            constructor() { this.active = false; }
+            init(x, y, speed) {
+                this.x = x; this.y = y;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed;
+                this.life = 1.0;
+                this.decay = 0.05;
+                this.active = true;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life -= this.decay;
+                if (this.life <= 0) this.active = false;
+            }
+            draw(ctx) {
+                // Dither effect for fade out
+                if (this.life > 0.5 || Math.random() > 0.5) {
+                    ctx.fillStyle = CONFIG.COLORS.MAIN;
+                    ctx.fillRect(this.x, this.y, 2, 2);
+                }
+            }
+        }
+
+        class Bullet {
+            constructor() { 
+                this.active = false; 
+                this.width = 4; 
+                this.height = 8; 
+            }
+            init(x, y, vy, isEnemy = false, isPiercing = false) {
+                this.x = x; this.y = y; this.vy = vy; this.vx = 0;
+                this.isEnemy = isEnemy; this.active = true;
+                this.isPiercing = isPiercing; this.piercedTargets = [];
+            }
+            update() {
+                this.y += this.vy; this.x += this.vx;
+                if (this.y < -20 || this.y > CONFIG.CANVAS_HEIGHT + 20 || 
+                    this.x < -20 || this.x > CONFIG.CANVAS_WIDTH + 20) {
+                    this.active = false;
+                }
+            }
+            draw(ctx) {
+                ctx.fillStyle = CONFIG.COLORS.MAIN;
+                // Simple rect for bullets in retro style
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        class PowerUpItem {
+            constructor(x, y, type) {
+                this.x = x; this.y = y;
+                this.width = 16; this.height = 16;
+                this.type = type; this.vy = 1.5; this.active = true;
+                this.char = type.label.charAt(0);
+            }
+            update() {
+                this.y += this.vy;
+                if (this.y > CONFIG.CANVAS_HEIGHT) this.active = false;
+            }
+            draw(ctx) {
+                // Blinking effect
+                if (Math.floor(Date.now() / 150) % 2 === 0) {
+                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
+                    ctx.strokeRect(this.x, this.y, this.width, this.height);
+                    ctx.fillStyle = CONFIG.COLORS.MAIN;
+                    ctx.font = '10px "Press Start 2P"';
+                    ctx.fillText(this.char, this.x + 4, this.y + 12);
+                }
+            }
+        }
+
+        class Enemy {
+            constructor() { this.active = false; this.id = Math.random().toString(36); }
+            init(x, y, type, level) {
+                this.x = x; this.y = y; this.type = type; this.active = true;
+                this.width = 24; this.height = 24; this.vx = 0;
+                
+                let speedBase = 0.8 + (level * 0.1); // Speed scales with level
+                
+                switch(type) {
+                    case TYPES.ARMORED: this.hp = 3 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
+                    case TYPES.FAST:    this.hp = 1; this.vy = 2.0 * speedBase; break;
+                    case TYPES.SPLITTER:this.hp = 1; this.vy = 1.0 * speedBase; break;
+                    case TYPES.SHOOTER: this.hp = 2; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
+                    case TYPES.HEALER:  this.hp = 3; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
+                    case TYPES.POWERUP: this.hp = 1; this.vy = 1.5 * speedBase; break;
+                    default:            this.hp = 1; this.vy = 1.0 * speedBase;
+                }
+                this.maxHp = this.hp;
+                this.scale = 0.12; 
+            }
+                update(game) {
+        this.y += this.vy;
+        this.x += this.vx;
+
+        if (this.type === TYPES.SHOOTER) {
+            this.shootTimer--;
+            if (this.shootTimer <= 0) {
+                game.spawnEnemyBullet(this.x + 10, this.y + 20);
+                this.shootTimer = 120 + Utils.randomInt(0, 100);
+            }
+        }
+
+        if (this.type === TYPES.HEALER) {
+            this.healTimer--;
+            if (this.healTimer <= 0) {
+                game.healNeighbors(this);
+                this.healTimer = 180;
+            }
+        }
+
+        if (this.y > CONFIG.CANVAS_HEIGHT + 50) this.active = false;
+    }
+
+    takeDamage(dmg) {
+        this.hp -= dmg;
+        return this.hp <= 0;
+    }
+            update(gameInstance) {
+                this.y += this.vy; this.x += this.vx;
+
+                if (this.type === TYPES.SHOOTER) {
+                    this.shootTimer--;
+                    if (this.shootTimer <= 0) {
+                        gameInstance.spawnEnemyBullet(this.x + this.width/2 - 2, this.y + this.height);
+                        this.shootTimer = 200 - (gameInstance.level * 5); // Shoot faster at higher levels
+                    }
+                }
+                if (this.type === TYPES.HEALER) {
+                    this.healTimer--;
+                    if (this.healTimer <= 0) {
+                        gameInstance.healNeighbors(this);
+                        this.healTimer = 180; 
+                    }
+                }
+                if (this.y > CONFIG.CANVAS_HEIGHT) { 
+                    gameInstance.playerHit();
+                    this.active = false;
+                }
+                if (this.x < 0 || this.x + this.width > CONFIG.CANVAS_WIDTH) this.vx = -this.vx;
+            }
+
+            draw(ctx) {
+                // Special types vẫn vẽ icon cũ
+                if (this.type === TYPES.HEALER) {
+                    ctx.fillStyle = CONFIG.COLORS.MAIN;
+                    ctx.fillRect(this.x+8, this.y+4, 8, 16);
+                    ctx.fillRect(this.x+2, this.y+8, 20, 8);
+                    return;
+                }
+                if (this.type === TYPES.POWERUP) {
+                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
+                    ctx.strokeRect(this.x+4, this.y+4, 16, 16);
+                    ctx.fillStyle = CONFIG.COLORS.MAIN;
+                    ctx.font = '10px "Press Start 2P"';
+                    ctx.fillText('?', this.x+8, this.y+16);
+                    return;
+                }
+
+                const drawSize = 32;
+                const drawX = this.x + this.width/2 - drawSize/2;
+                const drawY = this.y + this.height/2 - drawSize/2;
+                
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                ctx.rotate(Math.PI);  // Xoay 180° cho địch (bỏ nếu enemy.png đã úp sẵn)
+                ctx.drawImage(enemyImage, -drawSize/2, -drawSize/2, drawSize, drawSize);
+                ctx.restore();
+            }
+        }
+
+        class Player {
+            constructor(game) {
+                this.game = game;
+                this.width = CONFIG.PLAYER.WIDTH;
+                this.height = CONFIG.PLAYER.HEIGHT;
+                this.x = CONFIG.CANVAS_WIDTH / 2 - this.width / 2;
+                this.y = CONFIG.CANVAS_HEIGHT - 60;
+                this.speed = CONFIG.PLAYER.SPEED;
+                this.cooldown = 0;
+                this.powerUps = {};
+                this.shield = false;
+            }
+
+            update(input) {
+                // X Axis
+                if (input.keys['ArrowLeft']) this.x -= this.speed;
+                if (input.keys['ArrowRight']) this.x += this.speed;
+                // Y Axis (Logic mới)
+                if (input.keys['ArrowUp']) this.y -= this.speed;
+                if (input.keys['ArrowDown']) this.y += this.speed;
+
+                // Boundaries
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > CONFIG.CANVAS_WIDTH) this.x = CONFIG.CANVAS_WIDTH - this.width;
+                if (this.y < 0) this.y = 0;
+                if (this.y + this.height > CONFIG.CANVAS_HEIGHT) this.y = CONFIG.CANVAS_HEIGHT - this.height;
+
+                // Timers
+                for (let key in this.powerUps) {
+                    if (this.powerUps[key] > 0) {
+                        this.powerUps[key]--;
+                        if (this.powerUps[key] <= 0) {
+                            if (key == POWERUPS.SHIELD.id) this.shield = false;
+                            delete this.powerUps[key];
+                        }
+                    }
+                }
+
+                // Auto Fire
+                if (this.cooldown > 0) this.cooldown--;
+                if (this.cooldown <= 0) this.shoot();
+            }
+
+            shoot() {
+                let fireRate = this.hasPowerUp(POWERUPS.RAPID_FIRE) ? 8 : CONFIG.PLAYER.COOLDOWN;
+                this.cooldown = fireRate;
+                let isPiercing = this.hasPowerUp(POWERUPS.PIERCING);
+                let cx = this.x + this.width/2;
+
+                if (this.hasPowerUp(POWERUPS.MULTI_SHOT)) {
+                    this.game.spawnPlayerBullet(cx - 2, this.y, 0, isPiercing); 
+                    this.game.spawnPlayerBullet(cx - 10, this.y + 10, -1.5, isPiercing);
+                    this.game.spawnPlayerBullet(cx + 6, this.y + 10, 1.5, isPiercing);
+                } else {
+                    this.game.spawnPlayerBullet(cx - 2, this.y, 0, isPiercing);
+                }
+                this.game.playSound('shoot');
+            }
+
+            draw(ctx) {
+                const drawSize = 32;  // Kích thước hiển thị (tinh chỉnh theo ý)
+                const drawX = this.x + this.width/2 - drawSize/2;
+                const drawY = this.y + this.height/2 - drawSize/2;
+                
+                ctx.drawImage(playerImage, drawX, drawY, drawSize, drawSize);
+
+                // Shield effect giữ nguyên
+                if (this.shield) {
+                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([2, 2]);
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + this.height/2, 20, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            activatePowerUp(type) {
+                if (type.id === POWERUPS.EXTRA_LIFE.id) {
+                    this.game.lives++;
+                } else if (type.id === POWERUPS.BOMB.id) {
+                    this.game.triggerBomb(this.x, this.y);
+                } else if (type.id === POWERUPS.SHIELD.id) {
+                    this.shield = true;
+                }
+                if (type.duration > 0) this.powerUps[type.id] = type.duration;
+                this.game.playSound('powerup');
+            }
+            hasPowerUp(type) { return this.powerUps[type.id] > 0; }
+        }
+
+        // --- GAME ENGINE ---
+
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.canvas.width = CONFIG.CANVAS_WIDTH;
+                this.canvas.height = CONFIG.CANVAS_HEIGHT;
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.input = { keys: {} };
+                this.setupInputs();
+
+                this.bulletPool = new Pool(() => new Bullet(), (b) => b.active = true);
+                this.particlePool = new Pool(() => new Particle(), (p) => p.active = true);
+                this.enemyPool = new Pool(() => new Enemy(), (e) => { e.active = true; e.vx = 0; });
+
+                this.state = 'MENU';
+                this.score = 0;
+                this.highscore = localStorage.getItem('nokia_bs_highscore') || 0;
+                document.getElementById('menu-highscore').innerText = this.highscore;
+
+                // Sound Synth
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            setupInputs() {
+                // Keyboard
+                window.addEventListener('keydown', e => this.input.keys[e.code] = true);
+                window.addEventListener('keyup', e => this.input.keys[e.code] = false);
+
+                // D-Pad Touch/Mouse
+                const bindBtn = (id, code) => {
+                    const btn = document.getElementById(id);
+                    const press = (e) => { e.preventDefault(); this.input.keys[code] = true; btn.classList.add('pressed'); };
+                    const release = (e) => { e.preventDefault(); this.input.keys[code] = false; btn.classList.remove('pressed'); };
+                    
+                    btn.addEventListener('mousedown', press);
+                    btn.addEventListener('mouseup', release);
+                    btn.addEventListener('touchstart', press);
+                    btn.addEventListener('touchend', release);
+                    btn.addEventListener('mouseleave', release);
+                };
+
+                bindBtn('btn-up', 'ArrowUp');
+                bindBtn('btn-down', 'ArrowDown');
+                bindBtn('btn-left', 'ArrowLeft');
+                bindBtn('btn-right', 'ArrowRight');
+            }
+
+            start() {
+                if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                this.score = 0;
+                this.lives = 3;
+                this.level = 1;
+                this.bullets = [];
+                this.enemies = [];
+                this.particles = [];
+                this.powerUpItems = [];
+                this.player = new Player(this);
+                
+                this.initLevel(1);
+
+                this.state = 'PLAYING';
+                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                
+                this.lastTime = performance.now();
+                requestAnimationFrame(t => this.loop(t));
+            }
+
+            initLevel(lvl) {
+                this.level = lvl;
+                // Level Logic: 20 Levels
+                // Enemies count increases
+                // Spawn rate decreases (faster spawns)
+                
+                let baseCount = 10 + (lvl * 2);
+                let baseRate = Math.max(20, 70 - (lvl * 2));
+
+                this.waveData = {
+                    count: baseCount,
+                    spawnTimer: 0,
+                    spawnRate: baseRate,
+                    totalEnemies: baseCount
+                };
+                
+                if (lvl > 1) {
+                    this.showMessage(`LEVEL ${lvl}`);
+                }
+            }
+
+            showMessage(text) {
+                const msg = document.getElementById('message-screen');
+                document.getElementById('msg-title').innerText = text;
+                msg.classList.add('active');
+                setTimeout(() => msg.classList.remove('active'), 1500);
+            }
+
+            spawnEnemy() {
+                const x = Utils.randomRange(10, CONFIG.CANVAS_WIDTH - 30);
+                const y = -30;
+                let type = TYPES.NORMAL;
+                const r = Math.random();
+                
+                // Difficulty Logic based on 20 levels
+                // Level 1-5: Mostly Normal/Fast
+                // Level 6-10: Armored/Splitter appear
+                // Level 11-15: Shooter/Healer
+                // Level 16-20: Everything
+                
+                const lvl = this.level;
+
+                if (r < 0.05) type = TYPES.POWERUP;
+                else if (lvl >= 10 && r < 0.15) type = TYPES.HEALER;
+                else if (lvl >= 8 && r < 0.25) type = TYPES.SHOOTER;
+                else if (lvl >= 5 && r < 0.35) type = TYPES.SPLITTER;
+                else if (lvl >= 3 && r < 0.45) type = TYPES.ARMORED;
+                else if (r < 0.6) type = TYPES.FAST;
+
+                const e = this.enemyPool.get();
+                e.init(x, y, type, lvl);
+                this.enemies.push(e);
+            }
+
+            manageWaves() {
+                if (this.waveData.count > 0) {
+                    this.waveData.spawnTimer--;
+                    if (this.waveData.spawnTimer <= 0) {
+                        this.spawnEnemy();
+                        this.waveData.spawnTimer = this.waveData.spawnRate;
+                        this.waveData.count--;
+                    }
+                } else if (this.enemies.length === 0) {
+                    if (this.level < CONFIG.MAX_LEVEL) {
+                        this.initLevel(this.level + 1);
+                    } else {
+                        // Victory loop (endless 20)
+                        this.initLevel(20);
+                        this.waveData.spawnRate = 15; // Insane mode
+                    }
+                }
+            }
+
+            // ... (Movement, Collision, Draw logic mostly same but adapted for Nokia colors)
+
+            update() {
+                this.manageWaves();
+                this.player.update(this.input);
+
+                // Update Entities
+                [this.bullets, this.enemies, this.particles, this.powerUpItems].forEach(arr => {
+                    for (let i = arr.length - 1; i >= 0; i--) {
+                        let ent = arr[i];
+                        ent.update(this);
+                        if (!ent.active) {
+                            arr.splice(i, 1);
+                            if (ent instanceof Bullet) this.bulletPool.release(ent);
+                            if (ent instanceof Particle) this.particlePool.release(ent);
+                            if (ent instanceof Enemy) this.enemyPool.release(ent);
+                        }
+                    }
+                });
+
+                // Collisions
+                // 1. Bullet vs Enemy
+                this.bullets.forEach(b => {
+                    if (b.active && !b.isEnemy) {
+                        this.enemies.forEach(e => {
+                            if (e.active && Utils.checkAABB(b, e)) {
+                                if (e.takeDamage(1)) {
+                                    e.active = false;
+                                    this.addScore(e.type);
+                                    this.spawnExplosion(e.x + 12, e.y + 12);
+                                    if (e.type === TYPES.SPLITTER) this.splitEnemy(e);
+                                    if (e.type === TYPES.POWERUP || Math.random() < 0.05) this.spawnPowerUp(e.x, e.y);
+                                }
+                                if (!b.isPiercing) b.active = false;
+                            }
+                        });
+                    }
+                    // 2. Bullet vs Player
+                    if (b.active && b.isEnemy) {
+                        if (Utils.checkAABB(b, this.player)) {
+                            this.playerHit();
+                            b.active = false;
+                        }
+                    }
+                });
+
+                // 3. Player vs Enemy/Powerup
+                this.enemies.forEach(e => {
+                    if (e.active && Utils.checkAABB(e, this.player)) {
+                        this.playerHit();
+                        e.active = false;
+                        this.spawnExplosion(e.x+12, e.y+12);
+                    }
+                });
+                this.powerUpItems.forEach(p => {
+                    if (p.active && Utils.checkAABB(p, this.player)) {
+                        this.player.activatePowerUp(p.type);
+                        p.active = false;
+                    }
+                });
+            }
+
+            draw() {
+                this.ctx.fillStyle = CONFIG.COLORS.BG;
+                this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+                
+                this.powerUpItems.forEach(p => p.draw(this.ctx));
+                this.player.draw(this.ctx);
+                this.enemies.forEach(e => e.draw(this.ctx));
+                this.bullets.forEach(b => b.draw(this.ctx));
+                this.particles.forEach(p => p.draw(this.ctx));
+
+                // HUD
+                this.ctx.fillStyle = CONFIG.COLORS.MAIN;
+                this.ctx.font = '10px "Press Start 2P"';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText(`LVL ${this.level}`, 5, 12);
+                this.ctx.textAlign = 'right';
+                this.ctx.fillText(`${this.score.toString().padStart(6, '0')}`, CONFIG.CANVAS_WIDTH - 5, 12);
+                
+                // Lives (Hearts/Squares)
+                for(let i=0; i<this.lives; i++) {
+                    this.ctx.fillRect(5 + (i*10), CONFIG.CANVAS_HEIGHT - 12, 8, 8);
+                }
+            }
+
+            spawnPlayerBullet(x, y, vx, isPiercing) {
+                const b = this.bulletPool.get();
+                b.init(x, y, -5, false, isPiercing);
+                b.vx = vx;
+                this.bullets.push(b);
+            }
+            spawnEnemyBullet(x, y) {
+                const b = this.bulletPool.get();
+                b.init(x, y, 3, true, false);
+                this.bullets.push(b);
+            }
+            spawnExplosion(x, y) {
+                this.playSound('explosion');
+                for(let i=0; i<8; i++) {
+                    const p = this.particlePool.get();
+                    p.init(x, y, 3);
+                    this.particles.push(p);
+                }
+            }
+            spawnPowerUp(x, y) {
+                const keys = Object.keys(POWERUPS);
+                const k = keys[Math.floor(Math.random() * keys.length)];
+                const p = new PowerUpItem(x, y, POWERUPS[k]);
+                this.powerUpItems.push(p);
+            }
+            splitEnemy(parent) {
+                for(let d = -1; d <= 1; d+=2) {
+                    const e = this.enemyPool.get();
+                    e.init(parent.x, parent.y, TYPES.NORMAL, this.level);
+                    e.vx = d * 2; e.scale = 0.08;
+                    this.enemies.push(e);
+                }
+            }
+            healNeighbors(healer) {
+                this.enemies.forEach(e => {
+                    if (e!==healer && e.active && e.hp < e.maxHp) {
+                        let dist = Math.abs(e.x - healer.x) + Math.abs(e.y - healer.y);
+                        if (dist < 60) e.hp++;
+                    }
+                });
+            }
+            triggerBomb(x, y) {
+                this.playSound('explosion');
+                this.enemies.forEach(e => {
+                    if (e.active && Utils.checkCircleRect({x,y,r:150}, e)) {
+                        e.active = false;
+                        this.spawnExplosion(e.x, e.y);
+                        this.addScore(e.type);
+                    }
+                });
+                this.bullets = this.bullets.filter(b => !b.isEnemy);
+            }
+            playerHit() {
+                if (this.player.shield) { this.player.shield = false; return; }
+                this.lives--;
+                this.spawnExplosion(this.player.x, this.player.y);
+                if (this.lives <= 0) this.gameOver();
+            }
+            addScore(type) {
+                const vals = { [TYPES.ARMORED]: 30, [TYPES.SHOOTER]: 50, [TYPES.SPLITTER]: 20 };
+                this.score += (vals[type] || 10);
+            }
+            gameOver() {
+                this.state = 'GAMEOVER';
+                if (this.score > this.highscore) {
+                    this.highscore = this.score;
+                    localStorage.setItem('nokia_bs_highscore', this.highscore);
+                }
+                document.getElementById('go-score').innerText = this.score;
+                document.getElementById('go-highscore').innerText = this.highscore;
+                document.getElementById('gameover-screen').classList.add('active');
+            }
+            showMenu() {
+                this.state = 'MENU';
+                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                document.getElementById('start-screen').classList.add('active');
+            }
+            playSound(type) {
+                try {
+                    if (type === 'shoot') {
+                        document.getElementById('shootSound').currentTime = 0;
+                        document.getElementById('shootSound').play();
+                    } else if (type === 'explosion') {
+                        document.getElementById('explodeSound').currentTime = 0;
+                        document.getElementById('explodeSound').play();
+                    } else if (type === 'powerup') {
+                        // Giữ âm thanh synth cũ cho powerup
+                        const osc = this.audioCtx.createOscillator();
+                        const gain = this.audioCtx.createGain();
+                        osc.connect(gain); gain.connect(this.audioCtx.destination);
+                        const t = this.audioCtx.currentTime;
+                        osc.type = 'square'; 
+                        osc.frequency.setValueAtTime(440, t);
+                        osc.frequency.setValueAtTime(880, t+0.1);
+                        gain.gain.setValueAtTime(0.05, t); 
+                        gain.gain.linearRampToValueAtTime(0, t+0.2);
+                        osc.start(); osc.stop(t+0.2);
+                    }
+                } catch(e) {
+                    console.log('Audio error:', e);
+                }
+            }
+            togglePause() { 
+                /* Simple pause logic if needed */ 
+            }
+            
+            loop(t) {
+                if (this.state !== 'PLAYING') return;
+                this.update();
+                this.draw();
+                requestAnimationFrame(tm => this.loop(tm));
+            }
+        }
+        // === LOAD ẢNH MÁY BAY ===
+        const playerImage = document.getElementById('playerImg');
+        const enemyImage = document.getElementById('enemyImg');
+
+        // Đợi ảnh load xong
+        let imagesReady = 0;
+        const checkImagesReady = () => {
+            imagesReady++;
+            if (imagesReady === 2) console.log('✅ Máy bay ready!');
+        };
+        playerImage.onload = checkImagesReady;
+        enemyImage.onload = checkImagesReady;
+        const game = new Game();
+    </script>
+</body>
+</html>
