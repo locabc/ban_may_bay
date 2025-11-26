@@ -247,6 +247,34 @@
                 transform: scale(0.85);
             }
         }
+        /* === TỐI ƯU MOBILE SIÊU MƯỢT === */
+        @media (max-width: 500px) {
+            #nokia-phone {
+                width: 97vw;
+                height: 97vh;
+                padding: 5vw;
+            }
+            .screen-bezel {
+                width: 90vw;
+                height: 70vh;
+            }
+        }
+
+        /* Safe area cho iPhone notch */
+        @supports(padding: max(0px)) {
+            body {
+                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            }
+        }
+
+        /* 120Hz/144Hz smooth */
+        @media (prefers-reduced-motion: no-preference) {
+            * {
+                animation-duration: 0.05s !important;
+                transition-duration: 0.05s !important;
+            }
+        }
+
     </style>
     
 </head>
@@ -534,16 +562,16 @@
                 this.x = x; this.y = y; this.type = type; this.active = true;
                 this.width = 24; this.height = 24; this.vx = 0;
                 
-                let speedBase = 0.8 + (level * 0.1); // Speed scales with level
+                let speedBase = 0.8 + (level * 0.05); // Speed scales with level
                 
                 switch(type) {
-                    case TYPES.ARMORED: this.hp = 3 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
-                    case TYPES.FAST:    this.hp = 1; this.vy = 1.3 * speedBase; break;
-                    case TYPES.SPLITTER:this.hp = 1; this.vy = 1.0 * speedBase; break;
-                    case TYPES.SHOOTER: this.hp = 2; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
-                    case TYPES.HEALER:  this.hp = 3; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
-                    case TYPES.POWERUP: this.hp = 1; this.vy = 1.2 * speedBase; break;
-                    default:            this.hp = 1; this.vy = 1.0 * speedBase;
+                    case TYPES.ARMORED: this.hp = 3.5 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
+                    case TYPES.FAST:    this.hp = 1.5; this.vy = 1.3 * speedBase; break;
+                    case TYPES.SPLITTER:this.hp = 1.5; this.vy = 1.0 * speedBase; break;
+                    case TYPES.SHOOTER: this.hp = 2.5; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
+                    case TYPES.HEALER:  this.hp = 3.5; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
+                    case TYPES.POWERUP: this.hp = 1.5; this.vy = 1.2 * speedBase; break;
+                    default:            this.hp = 1.5; this.vy = 1.0 * speedBase;
                 }
                 this.maxHp = this.hp;
                 this.scale = 0.12; 
@@ -638,7 +666,7 @@
                     return;
                 }
 
-                const drawSize = 32;
+                const drawSize = 35;
                 const drawX = this.x + this.width/2 - drawSize/2;
                 const drawY = this.y + this.height/2 - drawSize/2;
                 
@@ -710,7 +738,7 @@
             }
 
             draw(ctx) {
-                const drawSize = 32;  // Kích thước hiển thị (tinh chỉnh theo ý)
+                const drawSize = 50;  // Kích thước hiển thị (tinh chỉnh theo ý)
                 const drawX = this.x + this.width/2 - drawSize/2;
                 const drawY = this.y + this.height/2 - drawSize/2;
                 
@@ -772,43 +800,38 @@
             }
 
             setupInputs() {
-                // Keyboard (Giữ nguyên cho PC)
+                // === Keyboard (PC) ===
                 window.addEventListener('keydown', e => this.input.keys[e.code] = true);
-                window.addEventListener('keyup', e => this.input.keys[e.code] = false);
+                window.addEventListener('keyup',   e => this.input.keys[e.code] = false);
 
-                // D-Pad Touch (Tối ưu cho Mobile)
+                // === D-Pad (Mobile + PC) – SIÊU MƯỢT ===
                 const bindBtn = (id, code) => {
                     const btn = document.getElementById(id);
-                    
-                    // Hàm xử lý chung
-                    const handleStart = (e) => {
-                        if (e.cancelable) e.preventDefault(); // Chặn hành động mặc định (như zoom, cuộn)
+
+                    const press = (e) => {
+                        if (e.cancelable) e.preventDefault();   // Chặn zoom, cuộn
                         this.input.keys[code] = true;
                         btn.classList.add('pressed');
-                        
-                        // Rung phản hồi (Haptic Feedback) nếu trình duyệt hỗ trợ
-                        if (navigator.vibrate) navigator.vibrate(15);
                     };
 
-                    const handleEnd = (e) => {
-                        if (e.cancelable) e.preventDefault();
+                    const release = () => {
                         this.input.keys[code] = false;
                         btn.classList.remove('pressed');
                     };
 
-                    // Sử dụng touchstart/touchend cho độ trễ thấp nhất
-                    btn.addEventListener('touchstart', handleStart, { passive: false });
-                    btn.addEventListener('touchend', handleEnd, { passive: false });
-                    
-                    // Fallback cho chuột trên PC
-                    btn.addEventListener('mousedown', handleStart);
-                    btn.addEventListener('mouseup', handleEnd);
-                    btn.addEventListener('mouseleave', handleEnd);
+                    // Mobile: touch (độ trễ thấp nhất)
+                    btn.addEventListener('touchstart', press,  { passive: false });
+                    btn.addEventListener('touchend',   release, { passive: false });
+
+                    // PC: chuột (fallback)
+                    btn.addEventListener('mousedown', press);
+                    btn.addEventListener('mouseup',   release);
+                    btn.addEventListener('mouseleave', release);
                 };
 
-                bindBtn('btn-up', 'ArrowUp');
-                bindBtn('btn-down', 'ArrowDown');
-                bindBtn('btn-left', 'ArrowLeft');
+                bindBtn('btn-up',    'ArrowUp');
+                bindBtn('btn-down',  'ArrowDown');
+                bindBtn('btn-left',  'ArrowLeft');
                 bindBtn('btn-right', 'ArrowRight');
             }
 
@@ -866,14 +889,19 @@
                 const msg = document.getElementById('message-screen');
                 document.getElementById('msg-title').innerText = text;
                 msg.classList.add('active');
-                // mark transition so waves won't spawn while message is visible
+                
+                // Mark transition
                 this.inTransition = true;
-                // pause audio during transition
+                // Stop & reset shoot sound immediately so it doesn't bleed into the transition
+                try {
+                    const s = document.getElementById('shootSound');
+                    if (s) { s.pause(); s.currentTime = 0; }
+                } catch(e) {}
+                // Pause other audio during transition
                 this.pauseAudio();
                 setTimeout(() => {
                     msg.classList.remove('active');
                     this.inTransition = false;
-                    // resume audio after transition
                     this.resumeAudio();
                 }, 1000);
             }
@@ -881,14 +909,23 @@
             // Pause audio playback and suspend audio context
             pauseAudio() {
                 try {
-                    // Suspend WebAudio context if available
+                    // Suspend WebAudio context nếu có
                     if (this.audioCtx && this.audioCtx.state === 'running') {
                         this.audioCtx.suspend().catch(() => {});
                     }
                 } catch (e) {}
-                // Pause any DOM audio elements (sound effects)
-                try { document.getElementById('shootSound').pause(); } catch(e) {}
-                try { document.getElementById('explodeSound').pause(); } catch(e) {}
+                
+                // Pause DOM audio với Promise để tránh interrupt error
+                const pauseAudioEl = (id) => {
+                    try {
+                        const audio = document.getElementById(id);
+                        if (audio) {
+                            audio.pause().catch(() => {});  // Bắt lỗi Promise
+                        }
+                    } catch(e) {}
+                };
+                pauseAudioEl('shootSound');
+                pauseAudioEl('explodeSound');
             }
 
             // Resume audio context so sounds can play again
@@ -1117,6 +1154,7 @@
                 document.getElementById('gameover-screen').classList.add('active');
             }
             showMenu() {
+
                 this.state = 'MENU';
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
                 document.getElementById('start-screen').classList.add('active');
@@ -1124,13 +1162,17 @@
             playSound(type) {
                 try {
                     if (type === 'shoot') {
-                        document.getElementById('shootSound').currentTime = 0;
-                        document.getElementById('shootSound').play();
+                        const audio = document.getElementById('shootSound');
+                        audio.pause();  // Pause trước (an toàn)
+                        audio.currentTime = 0;  // Reset
+                        audio.play().catch(e => {});  // Bắt lỗi Promise, không spam console
                     } else if (type === 'explosion') {
-                        document.getElementById('explodeSound').currentTime = 0;
-                        document.getElementById('explodeSound').play();
+                        const audio = document.getElementById('explodeSound');
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.play().catch(e => {});  // Bắt lỗi
                     } else if (type === 'powerup') {
-                        // Giữ âm thanh synth cũ cho powerup
+                        // Giữ âm thanh synth cũ (không bị lỗi này)
                         const osc = this.audioCtx.createOscillator();
                         const gain = this.audioCtx.createGain();
                         osc.connect(gain); gain.connect(this.audioCtx.destination);
@@ -1145,9 +1187,6 @@
                 } catch(e) {
                     console.log('Audio error:', e);
                 }
-            }
-            togglePause() { 
-                /* Simple pause logic if needed */ 
             }
             
             loop(t) {
@@ -1169,41 +1208,6 @@
         };
         playerImage.onload = checkImagesReady;
         enemyImage.onload = checkImagesReady;
-        // === TỐI ƯU MOBILE: AUTO RESIZE ===
-        function resizeGame() {
-            const phone = document.getElementById('nokia-phone');
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            
-            // Kích thước gốc của điện thoại Nokia trong CSS của bạn
-            const baseWidth = 340;  
-            const baseHeight = 680; // Ước lượng chiều cao tổng thể
-
-            // Tính tỉ lệ co giãn
-            const scaleX = windowWidth / baseWidth;
-            const scaleY = windowHeight / baseHeight;
-            
-            // Chọn tỉ lệ nhỏ hơn để đảm bảo điện thoại nằm lọt trong màn hình
-            // Giới hạn scale tối đa là 1.2 để không bị vỡ hạt quá mức trên máy tính
-            let scale = Math.min(scaleX, scaleY); 
-            if (scale > 1.2) scale = 1.2; 
-
-            // Áp dụng scale
-            phone.style.transform = `scale(${scale})`;
-            
-            // Căn giữa lại sau khi scale (nếu scale nhỏ hơn 1)
-            // Vì transform-origin là center, ta không cần chỉnh margin nhiều,
-            // nhưng cần đảm bảo body flexbox hoạt động đúng.
-        }
-
-        // Gọi hàm khi load và khi xoay màn hình
-        window.addEventListener('resize', resizeGame);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(resizeGame, 100); // Đợi xoay xong mới tính
-        });
-        
-        // Gọi ngay lập tức
-        resizeGame();
         const game = new Game();
     </script>
 </body>
