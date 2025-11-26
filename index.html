@@ -247,7 +247,11 @@
                 transform: scale(0.85);
             }
         }
-
+        @media (max-width: 400px) {
+            #nokia-phone {
+                top: -30px;
+            }
+        }
     </style>
     
 </head>
@@ -535,16 +539,16 @@
                 this.x = x; this.y = y; this.type = type; this.active = true;
                 this.width = 24; this.height = 24; this.vx = 0;
                 
-                let speedBase = 0.8 + (level * 0.05); // Speed scales with level
+                let speedBase = 0.8 + (level * 0.1); // Speed scales with level
                 
                 switch(type) {
-                    case TYPES.ARMORED: this.hp = 3.5 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
-                    case TYPES.FAST:    this.hp = 1.5; this.vy = 1.3 * speedBase; break;
-                    case TYPES.SPLITTER:this.hp = 1.5; this.vy = 1.0 * speedBase; break;
-                    case TYPES.SHOOTER: this.hp = 2.5; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
-                    case TYPES.HEALER:  this.hp = 3.5; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
-                    case TYPES.POWERUP: this.hp = 1.5; this.vy = 1.2 * speedBase; break;
-                    default:            this.hp = 1.5; this.vy = 1.0 * speedBase;
+                    case TYPES.ARMORED: this.hp = 3 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
+                    case TYPES.FAST:    this.hp = 1; this.vy = 1.3 * speedBase; break;
+                    case TYPES.SPLITTER:this.hp = 1; this.vy = 1.0 * speedBase; break;
+                    case TYPES.SHOOTER: this.hp = 2; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
+                    case TYPES.HEALER:  this.hp = 3; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
+                    case TYPES.POWERUP: this.hp = 1; this.vy = 1.2 * speedBase; break;
+                    default:            this.hp = 1; this.vy = 1.0 * speedBase;
                 }
                 this.maxHp = this.hp;
                 this.scale = 0.12; 
@@ -639,7 +643,7 @@
                     return;
                 }
 
-                const drawSize = 35;
+                const drawSize = 32;
                 const drawX = this.x + this.width/2 - drawSize/2;
                 const drawY = this.y + this.height/2 - drawSize/2;
                 
@@ -711,7 +715,7 @@
             }
 
             draw(ctx) {
-                const drawSize = 50;  // Kích thước hiển thị (tinh chỉnh theo ý)
+                const drawSize = 32;  // Kích thước hiển thị (tinh chỉnh theo ý)
                 const drawX = this.x + this.width/2 - drawSize/2;
                 const drawY = this.y + this.height/2 - drawSize/2;
                 
