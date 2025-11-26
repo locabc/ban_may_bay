@@ -247,33 +247,6 @@
                 transform: scale(0.85);
             }
         }
-        /* === TỐI ƯU MOBILE SIÊU MƯỢT === */
-        @media (max-width: 500px) {
-            #nokia-phone {
-                width: 97vw;
-                height: 97vh;
-                padding: 5vw;
-            }
-            .screen-bezel {
-                width: 90vw;
-                height: 70vh;
-            }
-        }
-
-        /* Safe area cho iPhone notch */
-        @supports(padding: max(0px)) {
-            body {
-                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            }
-        }
-
-        /* 120Hz/144Hz smooth */
-        @media (prefers-reduced-motion: no-preference) {
-            * {
-                animation-duration: 0.05s !important;
-                transition-duration: 0.05s !important;
-            }
-        }
 
     </style>
     
