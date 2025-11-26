@@ -26,15 +26,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            touch-action: none;
-            overflow: hidden;
+            height: 100vh; /* Dùng height thay vì min-height để cố định khung */
+            width: 100vw;
+            touch-action: none; /* QUAN TRỌNG: Tắt các thao tác vuốt mặc định của trình duyệt */
+            overflow: hidden;   /* Cấm cuộn trang */
+            -webkit-user-select: none; /* Cấm chọn văn bản trên iOS */
+            user-select: none;
+        }
+
+        /* Thêm class này cho các nút bấm để khi ấn không bị hiện khung xanh */
+        button, .btn, .ui-btn {
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         /* --- NOKIA PHONE FRAME --- */
         #nokia-phone {
             width: 340px;
-            height: 100%;
+            height: 690px;
             background-color: var(--case-color);
             border-radius: 40px;
             box-shadow: 
@@ -46,6 +55,7 @@
             flex-direction: column;
             align-items: center;
             position: relative;
+            
             box-sizing: border-box;
             transform-origin: center;
         }
@@ -65,7 +75,7 @@
         /* Screen Area */
         .screen-bezel {
             width: 260px;
-            height: 340px;
+            height: 450px;
             background-color: #555;
             border-radius: 10px 10px 20px 20px;
             padding: 15px;
@@ -255,8 +265,8 @@
                 <audio id="explodeSound" preload="auto" src="explode.wav"></audio>
                 <!-- START SCREEN -->
                 <div id="start-screen" class="ui-layer screen active">
-                    <h1>BRICK SHOOTER</h1>
-                    <p>HI-SCORE: <span id="menu-highscore">0</span></p>
+                    <h1>Pixel Pilot</h1>
+                    <p>HIGH-SCORE: <span id="menu-highscore">0</span></p>
                     <button class="ui-btn" onclick="game.start()">START</button>
                     <p style="margin-top:5px; font-size: 8px;">LEVELS: 20</p>
                 </div>
@@ -266,7 +276,7 @@
                     <h1>GAME OVER</h1>
                     <p>SCORE: <span id="go-score">0</span></p>
                     <p>BEST: <span id="go-highscore">0</span></p>
-                    <button class="ui-btn" onclick="game.start()">RETRY</button>
+                    <button class="ui-btn" onclick="game.start()">ONE MORE GAME?</button>
                     <button class="ui-btn" onclick="game.showMenu()">MENU</button>
                 </div>
 
@@ -306,6 +316,13 @@
                 MAIN: '#0f380f',     // Darkest (Ink)
                 ACCENT: '#306230',   // Dark Grey (Shading)
                 HIGHLIGHT: '#8b9c0f' // Transparent/Bg match
+            },
+            // Enemy HP bar appearance
+            ENEMY_HP: {
+                DEFAULT_COLOR: '#ff4d4d', // red for most
+                ARMORED_COLOR: '#ffcc33', // orange/gold for armored
+                BG_COLOR: '#333333',
+                HEIGHT: 4
             },
             PLAYER: {
                 WIDTH: 24,
@@ -521,43 +538,43 @@
                 
                 switch(type) {
                     case TYPES.ARMORED: this.hp = 3 + Math.floor(level/5); this.vy = 0.5 * speedBase; break;
-                    case TYPES.FAST:    this.hp = 1; this.vy = 2.0 * speedBase; break;
+                    case TYPES.FAST:    this.hp = 1; this.vy = 1.3 * speedBase; break;
                     case TYPES.SPLITTER:this.hp = 1; this.vy = 1.0 * speedBase; break;
                     case TYPES.SHOOTER: this.hp = 2; this.vy = 0.8 * speedBase; this.shootTimer = 150; break;
                     case TYPES.HEALER:  this.hp = 3; this.vy = 0.6 * speedBase; this.healTimer = 120; break;
-                    case TYPES.POWERUP: this.hp = 1; this.vy = 1.5 * speedBase; break;
+                    case TYPES.POWERUP: this.hp = 1; this.vy = 1.2 * speedBase; break;
                     default:            this.hp = 1; this.vy = 1.0 * speedBase;
                 }
                 this.maxHp = this.hp;
                 this.scale = 0.12; 
             }
-                update(game) {
-        this.y += this.vy;
-        this.x += this.vx;
+            update(game) {
+                this.y += this.vy;
+                this.x += this.vx;
 
-        if (this.type === TYPES.SHOOTER) {
-            this.shootTimer--;
-            if (this.shootTimer <= 0) {
-                game.spawnEnemyBullet(this.x + 10, this.y + 20);
-                this.shootTimer = 120 + Utils.randomInt(0, 100);
+                if (this.type === TYPES.SHOOTER) {
+                    this.shootTimer--;
+                    if (this.shootTimer <= 0) {
+                        game.spawnEnemyBullet(this.x + 10, this.y + 20);
+                        this.shootTimer = 120 + Utils.randomInt(0, 100);
+                    }
+                }
+
+                if (this.type === TYPES.HEALER) {
+                    this.healTimer--;
+                    if (this.healTimer <= 0) {
+                        game.healNeighbors(this);
+                        this.healTimer = 180;
+                    }
+                }
+
+                if (this.y > CONFIG.CANVAS_HEIGHT + 50) this.active = false;
             }
-        }
 
-        if (this.type === TYPES.HEALER) {
-            this.healTimer--;
-            if (this.healTimer <= 0) {
-                game.healNeighbors(this);
-                this.healTimer = 180;
+            takeDamage(dmg) {
+                this.hp -= dmg;
+                return this.hp <= 0;
             }
-        }
-
-        if (this.y > CONFIG.CANVAS_HEIGHT + 50) this.active = false;
-    }
-
-    takeDamage(dmg) {
-        this.hp -= dmg;
-        return this.hp <= 0;
-    }
             update(gameInstance) {
                 this.y += this.vy; this.x += this.vx;
 
@@ -583,6 +600,28 @@
             }
 
             draw(ctx) {
+                // Draw HP bar above enemy for selected types (FAST & ARMORED)
+                if (this.maxHp === undefined) this.maxHp = this.hp || 1;
+                if ((this.type === TYPES.FAST || this.type === TYPES.ARMORED) && this.hp !== undefined && this.maxHp > 0) {
+                    const barWidth = this.width;
+                    const barHeight = CONFIG.ENEMY_HP.HEIGHT || 4;
+                    const barX = this.x;
+                    const barY = this.y - barHeight - 4; // small gap above the sprite
+                    const hpRatio = Math.max(0, this.hp) / this.maxHp;
+
+                    // background (dark)
+                    ctx.fillStyle = CONFIG.ENEMY_HP.BG_COLOR || '#333';
+                    ctx.fillRect(barX, barY, barWidth, barHeight);
+                    // foreground color depends on type
+                    const fgColor = (this.type === TYPES.ARMORED) ? CONFIG.ENEMY_HP.ARMORED_COLOR : CONFIG.ENEMY_HP.DEFAULT_COLOR;
+                    ctx.fillStyle = fgColor || '#ff4d4d';
+                    ctx.fillRect(barX, barY, Math.ceil(barWidth * hpRatio), barHeight);
+                    // border
+                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(barX, barY, barWidth, barHeight);
+                }
+
                 // Special types vẫn vẽ icon cũ
                 if (this.type === TYPES.HEALER) {
                     ctx.fillStyle = CONFIG.COLORS.MAIN;
@@ -649,9 +688,9 @@
                     }
                 }
 
-                // Auto Fire
+                // Auto Fire (pause while game is in transition/message)
                 if (this.cooldown > 0) this.cooldown--;
-                if (this.cooldown <= 0) this.shoot();
+                if (this.cooldown <= 0 && !this.game.inTransition) this.shoot();
             }
 
             shoot() {
@@ -726,24 +765,45 @@
 
                 // Sound Synth
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Flag to prevent spawning during level transitions/messages
+                this.inTransition = false;
+                // Flag to avoid multiple scheduling for next level
+                this.nextLevelPending = false;
             }
 
             setupInputs() {
-                // Keyboard
+                // Keyboard (Giữ nguyên cho PC)
                 window.addEventListener('keydown', e => this.input.keys[e.code] = true);
                 window.addEventListener('keyup', e => this.input.keys[e.code] = false);
 
-                // D-Pad Touch/Mouse
+                // D-Pad Touch (Tối ưu cho Mobile)
                 const bindBtn = (id, code) => {
                     const btn = document.getElementById(id);
-                    const press = (e) => { e.preventDefault(); this.input.keys[code] = true; btn.classList.add('pressed'); };
-                    const release = (e) => { e.preventDefault(); this.input.keys[code] = false; btn.classList.remove('pressed'); };
                     
-                    btn.addEventListener('mousedown', press);
-                    btn.addEventListener('mouseup', release);
-                    btn.addEventListener('touchstart', press);
-                    btn.addEventListener('touchend', release);
-                    btn.addEventListener('mouseleave', release);
+                    // Hàm xử lý chung
+                    const handleStart = (e) => {
+                        if (e.cancelable) e.preventDefault(); // Chặn hành động mặc định (như zoom, cuộn)
+                        this.input.keys[code] = true;
+                        btn.classList.add('pressed');
+                        
+                        // Rung phản hồi (Haptic Feedback) nếu trình duyệt hỗ trợ
+                        if (navigator.vibrate) navigator.vibrate(15);
+                    };
+
+                    const handleEnd = (e) => {
+                        if (e.cancelable) e.preventDefault();
+                        this.input.keys[code] = false;
+                        btn.classList.remove('pressed');
+                    };
+
+                    // Sử dụng touchstart/touchend cho độ trễ thấp nhất
+                    btn.addEventListener('touchstart', handleStart, { passive: false });
+                    btn.addEventListener('touchend', handleEnd, { passive: false });
+                    
+                    // Fallback cho chuột trên PC
+                    btn.addEventListener('mousedown', handleStart);
+                    btn.addEventListener('mouseup', handleEnd);
+                    btn.addEventListener('mouseleave', handleEnd);
                 };
 
                 bindBtn('btn-up', 'ArrowUp');
@@ -806,7 +866,39 @@
                 const msg = document.getElementById('message-screen');
                 document.getElementById('msg-title').innerText = text;
                 msg.classList.add('active');
-                setTimeout(() => msg.classList.remove('active'), 1500);
+                // mark transition so waves won't spawn while message is visible
+                this.inTransition = true;
+                // pause audio during transition
+                this.pauseAudio();
+                setTimeout(() => {
+                    msg.classList.remove('active');
+                    this.inTransition = false;
+                    // resume audio after transition
+                    this.resumeAudio();
+                }, 1000);
+            }
+
+            // Pause audio playback and suspend audio context
+            pauseAudio() {
+                try {
+                    // Suspend WebAudio context if available
+                    if (this.audioCtx && this.audioCtx.state === 'running') {
+                        this.audioCtx.suspend().catch(() => {});
+                    }
+                } catch (e) {}
+                // Pause any DOM audio elements (sound effects)
+                try { document.getElementById('shootSound').pause(); } catch(e) {}
+                try { document.getElementById('explodeSound').pause(); } catch(e) {}
+            }
+
+            // Resume audio context so sounds can play again
+            resumeAudio() {
+                try {
+                    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                        this.audioCtx.resume().catch(() => {});
+                    }
+                } catch (e) {}
+                // We do not auto-play DOM audio; they will play on-demand after resume
             }
 
             spawnEnemy() {
@@ -836,7 +928,12 @@
             }
 
             manageWaves() {
+                // Don't spawn or advance waves while in transition/message state
+                if (this.inTransition) return;
+
                 if (this.waveData.count > 0) {
+                    // If new enemies are incoming, cancel any pending next-level transition
+                    if (this.nextLevelPending) this.nextLevelPending = false;
                     this.waveData.spawnTimer--;
                     if (this.waveData.spawnTimer <= 0) {
                         this.spawnEnemy();
@@ -844,12 +941,19 @@
                         this.waveData.count--;
                     }
                 } else if (this.enemies.length === 0) {
-                    if (this.level < CONFIG.MAX_LEVEL) {
-                        this.initLevel(this.level + 1);
-                    } else {
-                        // Victory loop (endless 20)
-                        this.initLevel(20);
-                        this.waveData.spawnRate = 15; // Insane mode
+                    // All enemies cleared for this wave — schedule next level after 0.5s
+                    if (!this.nextLevelPending) {
+                        this.nextLevelPending = true;
+                        setTimeout(() => {
+                            this.nextLevelPending = false;
+                            if (this.level < CONFIG.MAX_LEVEL) {
+                                this.initLevel(this.level + 1);
+                            } else {
+                                // Victory loop (endless 20)
+                                this.initLevel(20);
+                                this.waveData.spawnRate = 15; // Insane mode
+                            }
+                        }, 1000);
                     }
                 }
             }
@@ -1065,6 +1169,41 @@
         };
         playerImage.onload = checkImagesReady;
         enemyImage.onload = checkImagesReady;
+        // === TỐI ƯU MOBILE: AUTO RESIZE ===
+        function resizeGame() {
+            const phone = document.getElementById('nokia-phone');
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Kích thước gốc của điện thoại Nokia trong CSS của bạn
+            const baseWidth = 340;  
+            const baseHeight = 680; // Ước lượng chiều cao tổng thể
+
+            // Tính tỉ lệ co giãn
+            const scaleX = windowWidth / baseWidth;
+            const scaleY = windowHeight / baseHeight;
+            
+            // Chọn tỉ lệ nhỏ hơn để đảm bảo điện thoại nằm lọt trong màn hình
+            // Giới hạn scale tối đa là 1.2 để không bị vỡ hạt quá mức trên máy tính
+            let scale = Math.min(scaleX, scaleY); 
+            if (scale > 1.2) scale = 1.2; 
+
+            // Áp dụng scale
+            phone.style.transform = `scale(${scale})`;
+            
+            // Căn giữa lại sau khi scale (nếu scale nhỏ hơn 1)
+            // Vì transform-origin là center, ta không cần chỉnh margin nhiều,
+            // nhưng cần đảm bảo body flexbox hoạt động đúng.
+        }
+
+        // Gọi hàm khi load và khi xoay màn hình
+        window.addEventListener('resize', resizeGame);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeGame, 100); // Đợi xoay xong mới tính
+        });
+        
+        // Gọi ngay lập tức
+        resizeGame();
         const game = new Game();
     </script>
 </body>
