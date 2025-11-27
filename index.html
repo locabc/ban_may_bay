@@ -42,7 +42,7 @@
         /* --- NOKIA PHONE FRAME --- */
         #nokia-phone {
             width: 340px;
-            min-height: 110%;
+            min-height: 100%;
             background-color: var(--case-color);
             border-radius: 40px;
             box-shadow: 
@@ -238,6 +238,82 @@
             color: var(--nokia-bg);
         }
 
+        /* Shop / Responsive Grid */
+        #ship-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 8px;
+            align-items: start;
+        }
+        .shop-card {
+            background: #0a1f0a;
+            border: 2px solid var(--nokia-mid);
+            border-radius: 10px;
+            padding: 4px;
+            text-align: center;
+            font-size: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 120ms ease, box-shadow 120ms ease;
+            width: 56px;
+            min-height: 110px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+        }
+        .shop-card:focus, .shop-card:hover {
+            transform: translateY(-4px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            }
+        .shop-card .shop-img { display:block; margin:6px auto; image-rendering:pixelated; width:48px; height:auto }
+        .equip-badge { position:absolute; top:8px; right:8px; background:#ffd54f; color:#111; width:18px; height:18px; padding:0; border-radius:50%; font-size:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3); }
+        .price-badge { position:absolute; bottom:8px; right:8px; background:#306230; color:#dff5b8; padding:2px 6px; border-radius:6px; font-size:9px; }
+
+        /* Coins badge top-left when in shop */
+        .coins-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.6);
+            color: var(--nokia-light);
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        /* Modal for ship details */
+        .shop-modal {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            background: rgba(0,0,0,0.4);
+            pointer-events: auto;
+        }
+        .shop-modal .modal-card {
+            background: #0a1f0a;
+            border: 2px solid var(--nokia-mid);
+            padding: 12px;
+            border-radius: 10px;
+            width: 70%;
+            max-width: 260px;
+            text-align: center;
+            color: var(--nokia-light);
+        }
+        .shop-modal .modal-card img { width: 120px; image-rendering:pixelated; display:block; margin:0 auto 8px }
+        .shop-modal .modal-actions { display:flex; gap:8px; justify-content:center; margin-top:8px }
+
+        /* Hover / Tap effects for shop buttons */
+        .ui-btn.shop-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 10px rgba(0,0,0,0.35); }
+        .ui-btn.shop-btn:active { transform: translateY(0) scale(0.98); }
+
+
         .hidden { display: none !important; }
 
         /* Media Queries for small screens */
@@ -258,23 +334,51 @@
         <div class="screen-bezel">
             <div class="lcd-container">
                 <canvas id="gameCanvas"></canvas>
-                <img id="playerImg" src="player.png" style="display:none">
-                <img id="enemyImg" src="enemy.png" style="display:none">
+                <!-- PRELOAD IMAGES -->
+                 <!-- 6 MÁY BAY – CHỈ 1 DÒNG DUY NHẤT -->
+                <img id="ship0" src="assets/classic.png"  alt="Classic"  style="display:none">
+                <img id="ship1" src="assets/falcon.png"   alt="Falcon"   style="display:none">
+                <img id="ship2" src="assets/viper.png"    alt="Viper"    style="display:none">
+                <img id="ship3" src="assets/phantom.png"  alt="Phantom"  style="display:none">
+                <img id="ship4" src="assets/raptor.png"   alt="Raptor"   style="display:none">
+                <img id="ship5" src="assets/tempest.png"  alt="Tempest"  style="display:none">
+                <!-- ENEMY SPRITE -->
+                    <img id="enemy0" src="assets/enemy1.png" style="display:none">
+                    <img id="enemy1" src="assets/enemy2.png" style="display:none">
+                    <img id="enemy2" src="assets/enemy3.png" style="display:none">
+                    <img id="enemy3" src="assets/enemy4.png" style="display:none">
                 <!-- BOSS SPRITES -->
-                <img id="bossImg1" src="boss1.png" style="display:none">
-                <img id="bossImg2" src="boss2.png" style="display:none">
-                <img id="bossImg3" src="boss3.png" style="display:none">
+                <img id="bossImg1" src="assets/boss1.png" style="display:none">
+                <img id="bossImg2" src="assets/boss2.png" style="display:none">
+                <img id="bossImg3" src="assets/boss3.png" style="display:none">
                 <!-- PRELOAD AUDIO -->
-                <audio id="shootSound" preload="auto" src="shoot.wav"></audio>
-                <audio id="explodeSound" preload="auto" src="explode.wav"></audio>
+                    <audio id="shootSound" preload="auto" src="audios/shoot.wav"></audio>
+                    <audio id="explodeSound" preload="auto" src="audios/explode.wav"></audio>
                 <!-- START SCREEN -->
                 <div id="start-screen" class="ui-layer screen active">
                     <h1>Pixel Pilot</h1>
                     <p>HIGH-SCORE: <span id="menu-highscore">0</span></p>
                     <button class="ui-btn" onclick="game.start()">START</button>
-                    <p style="margin-top:5px; font-size: 8px;">LEVELS: 20</p>
+                    <p style="margin-top:5px; font-size: 8px;">MAX LEVELS: 20</p>
+                    <button class="ui-btn" onclick="game.showShop()">SHOP</button>
                 </div>
-
+                <div id="shop-screen" class="ui-layer screen">
+                    <h2 style="font-size:14px;margin-bottom:4px">SHOP</h2>
+                    <div class="coins-badge">COINS: <span id="shop-coins">0</span></div>
+                    <div id="ship-list"></div>
+                    <button class="ui-btn" onclick="game.showMenu()">BACK</button>
+                </div>
+                <!-- Ship detail modal -->
+                <div id="ship-modal" class="shop-modal" style="display:none">
+                    <div class="modal-card">
+                        <div style="text-align:right"><button class="ui-btn" onclick="game.hideShipModal()" style="font-size:8px;padding:4px">CLOSE</button></div>
+                        <img class="modal-img" src="" alt="ship">
+                        <div class="modal-name" style="font-size:10px;margin-top:4px"></div>
+                        <div class="modal-price" style="font-size:10px;margin-top:4px"></div>
+                        <div class="modal-stats" style="font-size:9px;margin-top:4px"></div>
+                        <div class="modal-actions"></div>
+                    </div>
+                </div>
                 <!-- GAME OVER SCREEN -->
                 <div id="gameover-screen" class="ui-layer screen">
                     <h1>GAME OVER</h1>
@@ -283,7 +387,6 @@
                     <button class="ui-btn" onclick="game.start()">ONE MORE GAME?</button>
                     <button class="ui-btn" onclick="game.showMenu()">MENU</button>
                 </div>
-
                 <!-- LEVEL UP / MESSAGE -->
                 <div id="message-screen" class="ui-layer screen">
                     <h1 id="msg-title">LEVEL UP!</h1>
@@ -383,67 +486,7 @@
                 let dx = distX - rect.width / 2;
                 let dy = distY - rect.height / 2;
                 return (dx * dx + dy * dy <= (circle.r * circle.r));
-            },
-            // Vector drawing adapted for Monochrome Nokia Style
-            /*
-            drawVectorPlane: (ctx, x, y, scale, rotation, isEnemy) => {
-                ctx.save();
-                ctx.translate(x, y);
-                ctx.rotate(rotation);
-                ctx.scale(scale, scale);
-                ctx.lineWidth = 2;
-                ctx.lineJoin = "round";
-                ctx.lineCap = "round";
-
-                // In monochrome, enemies are filled solid dark, player is outlined or lighter
-                const fillColor = isEnemy ? CONFIG.COLORS.MAIN : CONFIG.COLORS.BG;
-                const strokeColor = CONFIG.COLORS.MAIN;
-
-                // Body
-                ctx.fillStyle = fillColor;
-                ctx.strokeStyle = strokeColor;
-                ctx.beginPath();
-                ctx.moveTo(0, -100);
-                ctx.lineTo(30, -40);
-                ctx.lineTo(30, 80);
-                ctx.lineTo(15, 110);
-                ctx.lineTo(-15, 110);
-                ctx.lineTo(-30, 80);
-                ctx.lineTo(-30, -40);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Wings
-                ctx.beginPath();
-                ctx.moveTo(-30, -20);
-                ctx.lineTo(-110, 10);
-                ctx.lineTo(-30, 40);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(30, -20);
-                ctx.lineTo(110, 10);
-                ctx.lineTo(30, 40);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-                
-                // Details (Cockpit) - Just stroke
-                if (!isEnemy) {
-                    ctx.beginPath();
-                    ctx.moveTo(-10, -50);
-                    ctx.lineTo(10, -50);
-                    ctx.lineTo(0, -80);
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-
-                ctx.restore();
-            }
-                */
+            },   
         };
 
         class Pool {
@@ -546,7 +589,7 @@
             init(x, y, type, level) {
                 this.x = x; this.y = y; this.type = type; this.active = true;
                 this.width = 24; this.height = 24; this.vx = 0;
-                
+                this.visualType = Math.floor(Math.random() * 4);
                 let speedBase = 0.8 + (level * 0.1); // Speed scales with level
                 
                 switch(type) {
@@ -558,6 +601,7 @@
                     case TYPES.POWERUP: this.hp = 1; this.vy = 1.2 * speedBase; break;
                     default:            this.hp = 1; this.vy = 1.0 * speedBase;
                 }
+                this.visualType = Math.floor(Math.random() * 4);
                 this.maxHp = this.hp;
                 this.scale = 0.12; 
             }
@@ -613,55 +657,59 @@
             }
 
             draw(ctx) {
-                // Draw HP bar above enemy for selected types (FAST & ARMORED)
-                if (this.maxHp === undefined) this.maxHp = this.hp || 1;
-                if ((this.type === TYPES.FAST || this.type === TYPES.ARMORED) && this.hp !== undefined && this.maxHp > 0) {
-                    const barWidth = this.width;
-                    const barHeight = CONFIG.ENEMY_HP.HEIGHT || 4;
-                    const barX = this.x;
-                    const barY = this.y - barHeight - 4; // small gap above the sprite
-                    const hpRatio = Math.max(0, this.hp) / this.maxHp;
-
-                    // background (dark)
-                    ctx.fillStyle = CONFIG.ENEMY_HP.BG_COLOR || '#333';
-                    ctx.fillRect(barX, barY, barWidth, barHeight);
-                    // foreground color depends on type
-                    const fgColor = (this.type === TYPES.ARMORED) ? CONFIG.ENEMY_HP.ARMORED_COLOR : CONFIG.ENEMY_HP.DEFAULT_COLOR;
-                    ctx.fillStyle = fgColor || '#ff4d4d';
-                    ctx.fillRect(barX, barY, Math.ceil(barWidth * hpRatio), barHeight);
-                    // border
-                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(barX, barY, barWidth, barHeight);
-                }
-
-                // Special types vẫn vẽ icon cũ
                 if (this.type === TYPES.HEALER) {
                     ctx.fillStyle = CONFIG.COLORS.MAIN;
                     ctx.fillRect(this.x+8, this.y+4, 8, 16);
                     ctx.fillRect(this.x+2, this.y+8, 20, 8);
                     return;
-                }
-                if (this.type === TYPES.POWERUP) {
-                    ctx.strokeStyle = CONFIG.COLORS.MAIN;
-                    ctx.strokeRect(this.x+4, this.y+4, 16, 16);
-                    ctx.fillStyle = CONFIG.COLORS.MAIN;
-                    ctx.font = '10px "Press Start 2P"';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('?', this.x + this.width/2, this.y + this.height/2);
-                    return;
-                }
+                    }
+                    if (this.type === TYPES.POWERUP) {
+                        ctx.strokeStyle = CONFIG.COLORS.MAIN;
+                        ctx.strokeRect(this.x+4, this.y+4, 16, 16);
+                        ctx.fillStyle = CONFIG.COLORS.MAIN;
+                        ctx.font = '10px "Press Start 2P"';
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText('?', this.x + this.width/2, this.y + this.height/2);
+                        return;
+                    }
 
-                const drawSize = 32;
-                const drawX = this.x + this.width/2 - drawSize/2;
-                const drawY = this.y + this.height/2 - drawSize/2;
-                
+                // DÙNG KIỂU ĐÃ CHỌN TỪ LÚC SPAWN – KHÔNG ĐỔI NỮA!
+                const enemyImg = document.getElementById(`enemy${this.visualType}`);
+                const drawSize = 35;
+
                 ctx.save();
                 ctx.translate(this.x + this.width/2, this.y + this.height/2);
-                ctx.rotate(Math.PI);  // Xoay 180° cho địch (bỏ nếu enemy.png đã úp sẵn)
-                ctx.drawImage(enemyImage, -drawSize/2, -drawSize/2, drawSize, drawSize);
+                ctx.rotate(Math.PI);
+
+                if (enemyImg && enemyImg.complete) {
+                    ctx.drawImage(enemyImg, -drawSize/2, -drawSize/2, drawSize, drawSize);
+                } else {
+                    // Fallback vector nếu ảnh chưa load
+                    const colors = [
+                        {body:'#8bac0f',wing:'#306230'},
+                        {body:'#ff6b6b',wing:'#ff8e8e'},
+                        {body:'#4ecdc4',wing:'#44a08d'},
+                        {body:'#45b7d1',wing:'#96c93d'},
+                        {body:'#f9ca24',wing:'#f0932b'},
+                        {body:'#eb4d4b',wing:'#6c5ce7'}
+                    ][this.visualType];
+                    Utils.drawVectorPlane(ctx, 0, 0, 0.13, Math.PI, true, colors);
+                }
                 ctx.restore();
+
+                // HP bar (giữ nguyên)
+                if (this.maxHp > 1) {
+                    const hpBarWidth = 20;
+                    const hpBarHeight = 4;
+                    const hpBarX = this.x + (this.width - hpBarWidth) / 2;
+                    const hpBarY = this.y - hpBarHeight - 2;
+
+                    ctx.fillStyle = CONFIG.COLORS.MAIN;
+                    ctx.fillRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
+
+                    ctx.fillStyle = CONFIG.COLORS.FOREGROUND;
+                    ctx.fillRect(hpBarX, hpBarY, hpBarWidth * (this.hp / this.maxHp), hpBarHeight);
+                }
             }
         }
         class Boss {
@@ -737,6 +785,7 @@
                                     this.y + Math.random() * this.height);
                 
                 if (this.hp <= 0) {
+                    this.game.addCoins(50);
                     this.active = false;
                     this.game.bossActive = false;
                     this.game.addScore(500);
@@ -794,6 +843,9 @@
                 this.cooldown = 0;
                 this.powerUps = {};
                 this.shield = false;
+                this.speed = game.currentShip.speed;
+                this.fireDelay = game.currentShip.fireRate;
+                this.piercing = game.currentShip.piercing;
             }
 
             update(input) {
@@ -843,19 +895,24 @@
             }
 
             draw(ctx) {
-                const drawSize = 50;  // Kích thước hiển thị (tinh chỉnh theo ý)
-                const drawX = this.x + this.width/2 - drawSize/2;
-                const drawY = this.y + this.height/2 - drawSize/2;
-                
-                ctx.drawImage(playerImage, drawX, drawY, drawSize, drawSize);
+                const scale = 1.5;  // ← Thay số này để điều chỉnh độ to: 1.3 → 2.0 đều đẹp!
 
-                // Shield effect giữ nguyên
+                const drawW = this.width * scale;
+                const drawH = this.height * scale;
+                const drawX = this.x + this.width/2 - drawW/2;
+                const drawY = this.y + this.height/2 - drawH/2;
+
+                // VẼ MÁY BAY TO ĐẸP
+                ctx.drawImage(game.currentShip.img, drawX, drawY, drawW, drawH);
+
+                // SHIELD TỰ ĐỘNG TO THEO MÁY BAY
                 if (this.shield) {
                     ctx.strokeStyle = CONFIG.COLORS.MAIN;
-                    ctx.lineWidth = 1;
-                    ctx.setLineDash([2, 2]);
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
                     ctx.beginPath();
-                    ctx.arc(this.x + this.width/2, this.y + this.height/2, 20, 0, Math.PI * 2);
+                    const radius = (this.width * scale)/2 + 10;
+                    ctx.arc(this.x + this.width/2, this.y + this.height/2, radius, 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.setLineDash([]);
                 }
@@ -902,6 +959,10 @@
                 this.inTransition = false;
                 // Flag to avoid multiple scheduling for next level
                 this.nextLevelPending = false;
+                this.coins = parseInt(localStorage.getItem('nokia_bs_coins') || '1410');
+                this.unlockedShips = JSON.parse(localStorage.getItem('nokia_bs_ships') || '[0]');
+                this.currentShipId = parseInt(localStorage.getItem('nokia_bs_current') || '0');
+                this.currentShip = SHIPS[this.currentShipId];
             }
 
             setupInputs() {
@@ -1046,28 +1107,16 @@
             }
 
             spawnEnemy() {
-                const x = Utils.randomRange(10, CONFIG.CANVAS_WIDTH - 30);
-                const y = -30;
-                let type = TYPES.NORMAL;
-                const r = Math.random();
-                
-                // Difficulty Logic based on 20 levels
-                // Level 1-5: Mostly Normal/Fast
-                // Level 6-10: Armored/Splitter appear
-                // Level 11-15: Shooter/Healer
-                // Level 16-20: Everything
-                
-                const lvl = this.level;
-
-                if (r < 0.05) type = TYPES.POWERUP;
-                else if (lvl >= 10 && r < 0.15) type = TYPES.HEALER;
-                else if (lvl >= 8 && r < 0.25) type = TYPES.SHOOTER;
-                else if (lvl >= 5 && r < 0.35) type = TYPES.SPLITTER;
-                else if (lvl >= 3 && r < 0.45) type = TYPES.ARMORED;
-                else if (r < 0.6) type = TYPES.FAST;
+                // TỰ CHỌN LOẠI THEO LEVEL (KHÔNG NGẪU NHIÊN)
+                let type;
+                if(this.level < 3) type = TYPES.NORMAL;
+                else if(this.level < 6) type = Math.random() < 0.5 ? TYPES.NORMAL : TYPES.FAST;
+                else if(this.level < 10) type = Math.random() < 0.4 ? TYPES.NORMAL : TYPES.ARMORED;
+                else if(this.level < 15) type = Math.random() < 0.3 ? TYPES.FAST : TYPES.SHOOTER;
+                else type = Math.random() < 0.5 ? TYPES.ARMORED : TYPES.SPLITTER;
 
                 const e = this.enemyPool.get();
-                e.init(x, y, type, lvl);
+                e.init(Utils.randomInt(20, CONFIG.CANVAS_WIDTH - 40), -30, type, this.level);
                 this.enemies.push(e);
             }
 
@@ -1101,6 +1150,7 @@
                     if (!this.nextLevelPending) {
                         this.nextLevelPending = true;
                         setTimeout(() => {
+                            this.addCoins(30);
                             this.nextLevelPending = false;
                             this.boss = null; // Reset boss
 
@@ -1116,6 +1166,11 @@
                 }
             }
 
+            addCoins(amount) {
+                this.coins += amount;
+                localStorage.setItem('nokia_bs_coins', this.coins);
+            }
+           
             // ... (Movement, Collision, Draw logic mostly same but adapted for Nokia colors)
 
             update() {
@@ -1344,6 +1399,125 @@
                 }
             }
             
+            showShop() {
+                this.state = 'SHOP';
+                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                document.getElementById('shop-screen').classList.add('active');
+                document.getElementById('shop-coins').innerText = this.coins;
+
+                const list = document.getElementById('ship-list');
+                list.innerHTML = '';
+                list.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px';
+
+                SHIPS.forEach(ship => {
+                    const srcAttr = ship.img ? (ship.img.getAttribute('src') || ship.img.src) : '';
+                    const imgSrc = srcAttr && srcAttr.startsWith('/') ? srcAttr.slice(1) : srcAttr;
+
+                    const owned = this.unlockedShips.includes(ship.id);
+                    const equipped = this.currentShipId === ship.id;
+                    const card = document.createElement('div');
+                    card.className = 'shop-card';
+                    // Centered image only; click opens modal with details
+                    let badgeHtml = '';
+                    if (equipped) badgeHtml = '<div class="equip-badge">✓</div>';
+                    else if (owned) badgeHtml = '<div class="equip-badge" style="background:#9bbc0f;color:#092">✓</div>';
+                    else badgeHtml = '';
+                    card.innerHTML = `
+                        ${badgeHtml}
+                        <img src="${imgSrc}" class="shop-img" alt="${ship.name}">
+                        <div style="margin-top:6px;font-size:10px;color:var(--nokia-light)">${ship.name}</div>
+                        <div style="margin-top:4px;font-size:10px;color:#dff5b8">${ship.price===0?'FREE':ship.price+' ◎'}</div>
+                    `;
+                    card.addEventListener('click', () => this.showShipModal(ship.id));
+                    list.appendChild(card);
+                    // If badge exists on the card, make it interactive: equip on click/touch
+                    const badge = card.querySelector('.equip-badge');
+                    if (badge) {
+                        const onBadge = (e) => {
+                            e.stopPropagation();
+                            // If ship is not owned and costs > 0, do nothing (or we could open modal)
+                            if (!this.unlockedShips.includes(ship.id)) return;
+                            this.equipShip(ship.id);
+                        };
+                        badge.addEventListener('click', onBadge);
+                        // support touch on mobile
+                        badge.addEventListener('touchstart', (e) => { e.preventDefault(); onBadge(e); }, { passive: false });
+                    }
+                });
+            }
+
+            buyShip(id) {
+                const ship = SHIPS[id];
+                if(this.coins >= ship.price && !this.unlockedShips.includes(id)) {
+                    this.coins -= ship.price;
+                    this.unlockedShips.push(id);
+                    localStorage.setItem('nokia_bs_coins', this.coins);
+                    localStorage.setItem('nokia_bs_ships', JSON.stringify(this.unlockedShips));
+                    this.showShop();
+                }
+            }
+
+            showShipModal(id) {
+                const ship = SHIPS[id];
+                const modal = document.getElementById('ship-modal');
+                if (!modal) return;
+                const img = modal.querySelector('.modal-img');
+                const nameEl = modal.querySelector('.modal-name');
+                const priceEl = modal.querySelector('.modal-price');
+                const statsEl = modal.querySelector('.modal-stats');
+                const actions = modal.querySelector('.modal-actions');
+                const srcAttr = ship.img ? (ship.img.getAttribute('src') || ship.img.src) : '';
+                const imgSrc = srcAttr && srcAttr.startsWith('/') ? srcAttr.slice(1) : srcAttr;
+                img.src = imgSrc;
+                nameEl.innerText = ship.name;
+                priceEl.innerText = ship.price===0 ? 'FREE' : ship.price + ' ◎';
+                statsEl.innerText = `Speed: ${ship.speed}  Fire: ${ship.fireRate}`;
+                actions.innerHTML = '';
+                if (this.currentShipId === id) {
+                    // Don't show the circular tick in the modal — show a simple label instead
+                    const lbl = document.createElement('div');
+                    lbl.innerText = 'EQUIPPED';
+                    lbl.style.color = '#ffd54f';
+                    lbl.style.fontSize = '12px';
+                    actions.appendChild(lbl);
+                } else if (this.unlockedShips.includes(id)) {
+                    const btn = document.createElement('button');
+                    btn.className = 'ui-btn shop-btn';
+                    btn.innerText = 'EQUIP';
+                    btn.onclick = () => { this.equipShip(id); this.hideShipModal(); };
+                    // make EQUIP text yellow for visibility
+                    btn.style.color = '#ffd54f';
+                    actions.appendChild(btn);
+                } else if (this.coins >= ship.price) {
+                    const btn = document.createElement('button');
+                    btn.className = 'ui-btn shop-btn';
+                    btn.innerText = 'BUY';
+                    btn.onclick = () => { this.buyShip(id); this.hideShipModal(); };
+                    actions.appendChild(btn);
+                } else {
+                    const span = document.createElement('div');
+                    span.style.color = '#555';
+                    span.innerText = 'LOCKED';
+                    actions.appendChild(span);
+                }
+                // make CLOSE button text yellow for visibility
+                const closeBtn = modal.querySelector('button[onclick="game.hideShipModal()"]');
+                if (closeBtn) closeBtn.style.color = '#ffd54f';
+                modal.style.display = 'flex';
+            }
+
+            hideShipModal() {
+                const modal = document.getElementById('ship-modal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            equipShip(id) {
+                this.currentShipId = id;
+                this.currentShip = SHIPS[id];
+                localStorage.setItem('nokia_bs_current', id);
+                this.showShop();
+            }
+
             loop(t) {
                 if (this.state !== 'PLAYING') return;
                 this.update();
@@ -1351,18 +1525,22 @@
                 requestAnimationFrame(tm => this.loop(tm));
             }
         }
-        // === LOAD ẢNH MÁY BAY ===
-        const playerImage = document.getElementById('playerImg');
-        const enemyImage = document.getElementById('enemyImg');
+        const SHIPS = [
+            { id: 0, name: "Classic",  price: 0,      speed: 3,   fireRate: 300, piercing: false, img: document.getElementById('ship0') },
+            { id: 1, name: "Falcon",   price: 3000,   speed: 4,   fireRate: 250, piercing: false, img: document.getElementById('ship1') },
+            { id: 2, name: "Viper",    price: 6000,   speed: 4.5, fireRate: 200, piercing: true,  img: document.getElementById('ship2') },
+            { id: 3, name: "Phantom",  price: 12000,  speed: 5,   fireRate: 180, piercing: true,  img: document.getElementById('ship3') },
+            { id: 4, name: "Raptor",   price: 20000,  speed: 5.5, fireRate: 150, piercing: true,  img: document.getElementById('ship4') },
+            { id: 5, name: "Tempest",  price: 35000,  speed: 6,   fireRate: 120, piercing: true,  img: document.getElementById('ship5') }
+        ];
 
-        // Đợi ảnh load xong
-        let imagesReady = 0;
-        const checkImagesReady = () => {
-            imagesReady++;
-            if (imagesReady === 2) console.log('✅ Máy bay ready!');
-        };
-        playerImage.onload = checkImagesReady;
-        enemyImage.onload = checkImagesReady;
+        // === 6 LOẠI MÁY BAY ĐỊCH ===
+        const ENEMY_SHIPS = [
+            { id: 0, scale: 0.12, colors: { body: '#8bac0f', wing: '#306230' } },
+            { id: 1, scale: 0.14, colors: { body: '#ff6b6b', wing: '#ff8e8e' } },
+            { id: 2, scale: 0.10, colors: { body: '#4ecdc4', wing: '#44a08d' } },
+            { id: 3, scale: 0.16, colors: { body: '#45b7d1', wing: '#96c93d' } },
+        ];
         const game = new Game();
     </script>
 </body>
